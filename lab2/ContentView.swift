@@ -58,16 +58,17 @@ struct TiledCard: View {
                     .scaledToFit()
                     .padding()
             }
-            // Counter-rotate the front so it isn't mirrored when the container flips
+            // start with the image flipped so when we rotate, it comes out looking right
             .rotation3DEffect(.degrees(180), axis: (x: 0, y: 1, z: 0))
             // only show the image if the angle supports it
+            // without this, the card started showing right away
             .opacity(flipRotation >= 90 ? 1 : 0)
 
             // BACK face
             // only show the back of the card if the angle supports it
             RoundedRectangle(cornerRadius: 10)
                 .foregroundColor(.blue)
-                .rotation3DEffect(.degrees(180), axis: (x: 0, y: 1, z: 0))
+             //   .rotation3DEffect(.degrees(180), axis: (x: 0, y: 1, z: 0))
                 .opacity(flipRotation < 90 ? 1 : 0)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -78,9 +79,11 @@ struct TiledCard: View {
         .rotation3DEffect(
             .degrees(flipRotation),
             axis: (x: 0, y: 1, z: 0),
-            perspective: 0.4 // optional, adds depth realism
+            perspective: 0.4 //  adds depth realism
         )
         .onTapGesture(perform: onTap)
+        
+        // if we've flipping the card up or down, do the animation. reverse the direction if flipping down
         .onChange(of: isFaceUp) { _, newValue in
             withAnimation(.easeInOut(duration: flipDuration)) {
                 flipRotation = newValue ? 180 : 0
@@ -97,6 +100,7 @@ struct TiledCard: View {
         }
     }
 
+    // function to wiggle the card. We use this when we've matched 2 cards or win the game.
     
     @MainActor
     private func performWiggle(duration: Double) {
@@ -114,11 +118,6 @@ struct TiledCard: View {
         }
     }
 }
-
-
-
-
-
 
 // this is for showing some confetti when we win
 struct ConfettiParticle: Identifiable {
@@ -208,6 +207,7 @@ struct ContentView: View {
     // unfortunately it's a nightmare so it lives in a function
     
     @MainActor // Use @MainActor since it uses UIDevice.current
+    // function to figure out all the layout shenanigans
     private func calculateGridParameters(
         geometry: GeometryProxy,
         horizontalSizeClass: UserInterfaceSizeClass?
